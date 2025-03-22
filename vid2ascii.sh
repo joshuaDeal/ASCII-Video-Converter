@@ -11,12 +11,14 @@ printHelp() {
  	echo "Options:"
  	echo "  -h, --help          Show this help message and exit."
  	echo "  -o, --output FILE   Specify the output video file name. Default is 'ascii_video.mp4'."
+ 	echo "  -j, --jp2a OPTIONS  Additional options to pass to jp2a (enclosed in quotes)."
  	echo ""
  	echo "Arguments:"
  	echo "  <video_file>        The video file to process."
  	echo ""
  	echo "Examples:"
  	echo "  $0 -o output.mp4 input.mp4  # Render 'input.mp4' and save as 'output.mp4'."
+ 	echo "  $0 -j '--fill --color' input.mp4  # Render with additional jp2a options."
  	echo "  $0 input.mp4               # Render 'input.mp4' and save as 'ascii_video.mp4'."
  	echo ""
  	echo "This script extracts frames from the specified video file, converts them to ASCII art,"
@@ -44,6 +46,11 @@ evalArgs() {
 		if [ "${arguments[i]}" == "-o" ] || [ "${arguments[i]}" == "--output" ]; then
 			out_file=${arguments[i + 1]}
 		fi
+
+		# Specify jp2a options.
+		if [ "${arguments[i]}" == "-j" ] || [ "${arguments[i]}" == "--jp2a" ]; then
+			jp2a_options=${arguments[i + 1]}
+		fi
 	done
 }
 
@@ -54,7 +61,7 @@ getVideoDetails() {
 	# Get frame rate.
 	frame_rate=$(ffprobe -v error -select_streams v:0 -show_entries stream=avg_frame_rate -of csv=p=0 "$FILE")
 
-	# Convert frame_rate from fractions to a float value (to get the actual frame rate)
+	# convert frame_rate from fractions to a float value (to get the actual frame rate)
 	frame_rate_value=$(echo "scale=2; $frame_rate" | bc)
 
 	# Get frame count.
@@ -90,8 +97,8 @@ frames2Text() {
 	for frame in "$dir_name"/*.png; do
 		base_name=$(basename "$frame" .png)
 
-		# Convert each image to text.
-		jp2a --colors "$frame" > "$dir_name/$base_name.txt"
+		# Convert each image to text with provided jp2a options.
+		jp2a $jp2a_options "$frame" > "$dir_name/$base_name.txt"
 
 	done
 }
@@ -134,7 +141,7 @@ remakeVideo() {
 		ffmpeg -i "$dir_name/no-sound.mp4" -i "$dir_name/audio.mp3" -c:v copy -c:a aac -b:a 192k -shortest "$newfile"
 
 	else
-		mv "$dir_name/no-sound.mp4" $newfile
+		mv "$dir_name/no-sound.mp4" "$newfile"
 	fi
 
 	echo "Reassembled video created: $newfile"
@@ -154,10 +161,12 @@ cleanUp() {
 set -e
 
 out_file=ascii_video.mp4
-evalArgs $@
-getVideoDetails ${!#}
+jp2a_options=""  # Default to no options.
+evalArgs "$@"
+getVideoDetails "${!#}"
 breakVideo "$frame_count"
 frames2Text "$dir_name" "$frame_count"
 text2Img "$dir_name"
 remakeVideo "$dir_name" "$frame_count" "$frame_rate_value" "$out_file"
 cleanUp "$dir_name"
+
