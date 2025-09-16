@@ -151,7 +151,7 @@ remakeVideo() {
 	newfile=$4
 
 	# Create new video.
-	ffmpeg -framerate "$frame_rate" -i "$dir_name/ascii/%0${#frame_count}d-ascii.png" -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -bf 2 -b:v 4M -c:a aac -b:a 192k -shortest "$dir_name/no-sound.mp4"
+	ffmpeg -framerate "$frame_rate" -i "$dir_name/ascii/%0${#frame_count}d-ascii.png" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -bf 2 -b:v 4M -c:a aac -b:a 192k -shortest "$dir_name/no-sound.mp4"
 
 	# Process audio if it exists.
 	if [ -n "$(ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 $FILE)" ]; then
