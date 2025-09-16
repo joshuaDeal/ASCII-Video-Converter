@@ -54,6 +54,27 @@ evalArgs() {
 	done
 }
 
+# Check that all dependencies are available.
+checkDepends() {
+	which ffmpeg >> /dev/null
+	if [ $? -eq 1 ]; then
+		echo "Error: ffmpeg not found."
+		exit
+	fi
+
+	which jp2a >> /dev/null
+	if [ $? -eq 1 ]; then
+		echo "Error: jp2a not found."
+		exit
+	fi
+
+	which magick >> /dev/null
+	if [ $? -eq 1 ]; then
+		echo "Error: magick not found."
+		exit
+	fi
+} 
+
 # Get details about video like frame count and frame rate.
 getVideoDetails() {
 	FILE=$1
@@ -163,6 +184,7 @@ set -e
 out_file=ascii_video.mp4
 jp2a_options=""  # Default to no options.
 evalArgs "$@"
+checkDepends
 getVideoDetails "${!#}"
 breakVideo "$frame_count"
 frames2Text "$dir_name" "$frame_count"
