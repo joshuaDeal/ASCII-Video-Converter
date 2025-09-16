@@ -2,6 +2,8 @@
 
 A Bash script to render video files into ASCII art using `jp2a`, `ffmpeg`, and `ImageMagick`.
 
+https://github.com/user-attachments/assets/72e806ae-383f-4815-b9d7-ef6b2d2b46bb
+
 ## Features
 
 - Extracts frames from a video and converts them to ASCII art.
